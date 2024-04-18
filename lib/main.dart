@@ -1,5 +1,8 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter_application_1/Model/Perfil.dart';
+import 'package:flutter_application_1/View/RecuperarSenha.dart';
+import 'package:flutter_application_1/View/Registrar.dart';
 import 'package:http/http.dart' as http;
 import 'firebase_options.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -22,7 +25,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.purple),
         useMaterial3: true,
       ),
-      home: const MyHomePage(title: 'Fire Base Connection'),
+      home: const MyHomePage(title: 'Fire Base - Home '),
     );
   }
 }
@@ -35,42 +38,33 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  String msg = "Tente se Conectar.";
-  TextEditingController controlLogin = TextEditingController();
+  TextEditingController controlEmail = TextEditingController();
   TextEditingController controlSenha = TextEditingController();
 
-  Future<void> _logar() async {
-    final response = await http
-        .post(Uri.parse("http://localhost/flutterconn/login.php"), body: {
-      "username": controlLogin.text,
-      "senha": controlSenha.text
-    }, headers: {
-      "Access-Control-Allow-Origin": "*", // Required for CORS support to work
-      "Access-Control-Allow-Credentials":
-          "true", // Required for cookies, authorization headers with HTTPS
-      "Access-Control-Allow-Headers":
-          "Origin,Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token,locale",
-      "Access-Control-Allow-Methods": "POST, OPTIONS"
-    });
+  void _logar(BuildContext context) async {
+    try {
+      await FirebaseAuth.instance.signInWithEmailAndPassword(
+          email: controlEmail.text, password: controlSenha.text);
 
-    var data = json.decode(response.body);
-
-    if (data.length != 0) {
-      var id = int.parse(data[0]["idlogin"]);
       Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => Perfil(idlogin: id)),
-      );
-    } else {
-      setState(() {
-        msg = "Login Invalido!";
-      });
+          context, MaterialPageRoute(builder: (context) => Perfil()));
+    } catch (error) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text('Error: $error'),
+        backgroundColor: Colors.purple,
+      ));
     }
   }
 
-  void _registrar() {}
+  void _registrar() {
+    Navigator.push(
+        context, MaterialPageRoute(builder: (context) => Registrar()));
+  }
 
-  void _recuperarSenha() {}
+  void _recuperarSenha() {
+    Navigator.push(
+        context, MaterialPageRoute(builder: (context) => RecuperarSenha()));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -85,12 +79,18 @@ class _MyHomePageState extends State<MyHomePage> {
         body: Container(
           child: Column(
             children: [
+              const SizedBox(
+                height: 20,
+              ),
               const Padding(
                 padding: EdgeInsets.all(8.0),
                 child: Text("E-mail"),
               ),
               TextFormField(
-                controller: controlLogin,
+                controller: controlEmail,
+              ),
+              const SizedBox(
+                height: 20,
               ),
               const Text("Senha"),
               TextFormField(
@@ -102,14 +102,20 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
               MaterialButton(
                   onPressed: () {
-                    _logar();
+                    _logar(context);
                   },
                   child: const Text("Logar")),
+              const SizedBox(
+                height: 25,
+              ),
               MaterialButton(
                   onPressed: () {
                     _recuperarSenha();
                   },
                   child: const Text("Esqueceu sua Senha?")),
+              const SizedBox(
+                height: 25,
+              ),
               MaterialButton(
                   onPressed: () {
                     _registrar();
@@ -118,7 +124,6 @@ class _MyHomePageState extends State<MyHomePage> {
               const SizedBox(
                 height: 25,
               ),
-              Text("LOG: " + msg)
             ],
           ),
         ));
